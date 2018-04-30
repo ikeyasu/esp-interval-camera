@@ -1,0 +1,5 @@
+/hardware/esp-interval-camera/local_setting.h
+/images/
+*~
+.*.swp
+.DS_Store
