@@ -14,7 +14,7 @@ extern "C" {
 };
 #include "local_setting.h"
 
-/****  *****/
+/**** RTCMem *****/
 struct RTCMem {
   uint32_t hash;
   uint16_t count;
@@ -38,6 +38,7 @@ const byte gCameraAddr = (CAM_ADDR << 5);  // addr
 unsigned long gPicTotalLen = 0;  // picture length
 ESP8266WiFiMulti gWifiMulti;
 HTTPClient gHttp;
+ADC_MODE(ADC_VCC);
 
 void setup()
 {
@@ -73,12 +74,16 @@ void setup()
   Serial.print("unix time: ");
   Serial.println(epochTime);
 
+  int vcc = ESP.getVcc();
+  Serial.print("vcc:");
+  Serial.println(vcc);
+
   loadRTCMem();
   initCapture();
   delay(1500);
   Serial.println("Start to take a picture");
   capture();
-  sendData(epochTime);
+  sendData(epochTime, vcc);
   Serial.print("Taking pictures success ,number : ");
   Serial.println(gRTCMem.count);
   gRTCMem.count++;
@@ -186,7 +191,7 @@ int skipLF(char in[], int len) {
   return len - skip;
 }
 
-char sendData(int index) {
+char sendData(int index, int vcc) {
   unsigned int pktCnt = (gPicTotalLen) / (PIC_PKT_LEN - 6);
   if ((gPicTotalLen % (PIC_PKT_LEN - 6)) != 0) pktCnt += 1;
 
@@ -214,8 +219,8 @@ retry:
       if (++retry_cnt < 100) goto retry;
       else break;
     }
-    sprintf(gURL + URL_LEN, "n=%d&last=%s",
-      index, (i == pktCnt - 1) ? "y" : "n");
+    sprintf(gURL + URL_LEN, "n=%d&last=%s&vcc=%d",
+      index, (i == pktCnt - 1) ? "y" : "n", vcc);
     gHttp.begin(gURL);
     int httpCode = gHttp.POST((uint8_t *) &pkt[4], cnt - 6);
     Serial.print("sendData: httpCode=");

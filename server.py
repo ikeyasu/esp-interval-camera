@@ -21,10 +21,13 @@ def run_http_server(host):
       outfile.close()
       if request.args['last'] == 'y':
         print("{} recieved.".format(jpg))
+        vccfile = open('vcc.csv', 'a')
+        vccfile.write("{},{}\n".format(request.args['n'], request.args['vcc']))
+        vccfile.close()
       return ''
     else:
       return ''
   app.run(host)
 
 if __name__ == '__main__':
-  run_http_server("192.168.1.22")
+  run_http_server("0.0.0.0")
